@@ -57,7 +57,7 @@ export class InvoiceController {
     async borrarInvoice (@Res() res, @Query("invoiceID") invoiceID) {
       const invoiceBorrado = await this.invoiceService.borrarInvoice(invoiceID);
       if (!invoiceBorrado) throw new NotFoundException("Invoice no encontrado");      
-      res.status(HttpStatus.OK).json({ msg: "invoice borrado", invoiceBorrado });
+      return res.status(HttpStatus.OK).json({ msg: "invoice borrado", invoiceBorrado });
     }
 
 }

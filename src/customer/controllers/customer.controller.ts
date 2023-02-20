@@ -58,7 +58,7 @@ export class CustomerController {
     async borrarCustomer (@Res() res, @Query("customerID") customerID) {
       const customerBorrado = await this.customerService.borrarCustomer(customerID);
       if (!customerBorrado) throw new NotFoundException("Customer no encontrado");      
-      res.status(HttpStatus.OK).json({ msg: "Customer borrado", customerBorrado });
+      return res.status(HttpStatus.OK).json({ msg: "Customer borrado", customerBorrado });
     }
 
 }

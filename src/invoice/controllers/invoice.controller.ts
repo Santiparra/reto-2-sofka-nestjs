@@ -53,7 +53,6 @@ export class InvoiceController {
       return res.status(HttpStatus.OK).json({ msg: "invoice actualizado", invoiceActualizado });
     }
 
-
     @Delete("/borrar")
     async borrarInvoice (@Res() res, @Query("invoiceID") invoiceID) {
       const invoiceBorrado = await this.invoiceService.borrarInvoice(invoiceID);

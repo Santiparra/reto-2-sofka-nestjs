@@ -1,6 +1,4 @@
-import { Document } from "mongoose";
-
-export interface Customer extends Document{
+export interface Customer {
     readonly nombre: string;
     readonly email: string;
     readonly registrado: boolean;

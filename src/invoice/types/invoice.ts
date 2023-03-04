@@ -1,6 +1,4 @@
-import { Document } from "mongoose";
-
-export interface Invoice extends Document{
+export interface Invoice {
     readonly numFactura: number;
     readonly fecha: string;
     readonly vence: string;

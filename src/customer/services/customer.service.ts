@@ -1,53 +1,48 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Customer } from '../types/customer';
 import { CustomerDto } from '../dto/customer.dto';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { CustomerSchema } from '../schemas/customer.schema';
 
 @Injectable()
 export class CustomerService {
-    constructor(@InjectModel("customer") private customerModel: Model<Customer>) {}
+    customers: Customer[] = []
 
-    async buscarCustomers(): Promise<Customer[]> {
-        const customers = await this.customerModel.find();
+    buscarCustomers(): Customer[] {
+        const customers = this.customers;
         return  customers
     }
 
-    async buscarCustomer (customerID: number): Promise<Customer> {
-        const customer = await this.customerModel.findById(customerID);
-        return customer
+    buscarCustomer (customerNombre: string): Customer {
+        const customer = this.customers.filter(customer => customer.nombre == customerNombre);
+        return customer[0]
     }
 
-    async crearCustomer (customerDto: CustomerDto): Promise<Customer> {
-        const customer = new this.customerModel(customerDto);
-        await customer.save();
-        return customer
+    crearCustomer (customerDto: CustomerDto): Customer {
+        this.customers.push(customerDto)
+        return customerDto
     }
 
-    async editarCustomer (customerID: number, customerDto: CustomerDto): Promise<Customer> {
-        const customerEditado = await this.customerModel
-        .findByIdAndUpdate(customerID, customerDto, { new: true });
-        return customerEditado
+    editarCustomer (customerNombre: string, customerDto: CustomerDto): Customer {
+        const customerAEditar = this.buscarCustomer(customerNombre);
+        if (!customerAEditar) throw new HttpException("no se pudo editar el customer", HttpStatus.NOT_FOUND) 
+        const indice = this.customers.indexOf(customerAEditar);
+        const newCustomerData = { ...customerAEditar, ...customerDto }
+        this.customers.splice(indice, 1, newCustomerData)
+        return newCustomerData
     }
 
-    async actualizarCustomer (customerID: number, customerDto: CustomerDto) {
-        const customerActualizado = await this.customerModel
-        .findByIdAndUpdate(customerID, customerDto)
-        .setOptions({ overwrite: true, new: true })
-        .populate("nombre")
-        .populate("email")
-        .populate("registrado")
-        .populate("saldoCuenta");
-        if (!customerActualizado) {
-            throw new NotFoundException();
-          };
-        return customerActualizado
+    actualizarCustomer (customerNombre: string, customerDto: CustomerDto) {
+        const customerAEditar = this.buscarCustomer(customerNombre);
+        if (!customerAEditar) throw new HttpException("no se pudo editar el customer", HttpStatus.NOT_FOUND) 
+        const indice = this.customers.indexOf(customerAEditar);
+        this.customers.splice(indice, 1, customerDto)
+        return customerDto
     }
 
-    async borrarCustomer (customerID: number): Promise<Customer> {
-        const customerBorrado = await this.customerModel.findByIdAndDelete(customerID);
-        return customerBorrado
+    borrarCustomer (customerNombre: string): Customer {
+        const customerABorrar = this.customers.find(customer => customer.nombre == customerNombre);
+        if (!customerABorrar) throw new HttpException("no se pudo editar el customer", HttpStatus.NOT_FOUND) 
+        this.customers = this.customers.filter(customer => customer.nombre != customerNombre);
+        return customerABorrar
     }
 
 }

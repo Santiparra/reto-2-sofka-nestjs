@@ -1,53 +1,46 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Invoice } from '../types/invoice';
 import { CrearInvoiceDto } from '../dto/invoice.dto';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { InvoiceSchema } from '../schemas/invoice.schema';
 
 
 @Injectable()
 export class InvoiceService {
-    constructor(@InjectModel("invoice") private invoiceModel: Model<Invoice>) {}
+    constructor() {}
 
-    async buscarInvoices(): Promise<Invoice[]> {
-        const invoices = await this.invoiceModel.find()
+    invoices: Invoice[] = []
+
+    buscarInvoices(): Invoice[] {
+        const invoices = this.invoices;
         return  invoices
     }
 
-    async buscarInvoice (numeroFactura: number): Promise<Invoice> {
-        const invoice = await this.invoiceModel.findById(numeroFactura);
-        return invoice
+    buscarInvoice (numeroFactura: number): Invoice {
+        return this.invoices.find(factura => factura.numFactura === numeroFactura);
     }
 
-    async crearInvoice (crearInvoiceDto: CrearInvoiceDto): Promise<Invoice> {
-        const invoice = new this.invoiceModel(crearInvoiceDto);
-        await invoice.save();
-        return invoice
+    crearInvoice (crearInvoiceDto: CrearInvoiceDto): Invoice {
+        this.invoices.push(crearInvoiceDto)
+        return crearInvoiceDto
     }
 
-    async editarInvoice (numeroFactura: number, crearInvoiceDto: CrearInvoiceDto): Promise<Invoice> {
-        const invoiceEditado= await this.invoiceModel
-        .findByIdAndUpdate(numeroFactura, crearInvoiceDto, { new: true });
-        return invoiceEditado
+    editarInvoice (numeroFactura: number, crearInvoiceDto: CrearInvoiceDto): Invoice {
+        const editInvoice = this.buscarInvoice(numeroFactura);
+        const indice = this.invoices.indexOf(editInvoice);
+        const newInvoiceData = { ...editInvoice, ...crearInvoiceDto }
+        this.invoices.splice(indice, 1, newInvoiceData)
+        return newInvoiceData
     }
 
-    async actualizarInvoice (numeroFactura: number, crearInvoiceDto: CrearInvoiceDto) {
-        const invoiceActualizado = await this.invoiceModel
-        .findByIdAndUpdate(numeroFactura, crearInvoiceDto)
-        .setOptions({ overwrite: true, new: true })
-        .populate("numFactura")
-        .populate("fecha")
-        .populate("vence")
-        .populate("monto");
-        if (!invoiceActualizado) {
-            throw new NotFoundException();
-          };
-        return invoiceActualizado
+    actualizarInvoice (numeroFactura: number, crearInvoiceDto: CrearInvoiceDto) {
+        const editInvoice = this.buscarInvoice(numeroFactura);
+        const indice = this.invoices.indexOf(editInvoice);
+        this.invoices.splice(indice, 1, crearInvoiceDto)
+        return crearInvoiceDto
     }
 
-    async borrarInvoice (numeroFactura: number): Promise<Invoice> {
-        const invoiceBorrado = await this.invoiceModel.findByIdAndDelete(numeroFactura);
-        return invoiceBorrado
+    borrarInvoice (numeroFactura: number): Invoice {
+        const deleteInvoice= this.invoices.find(invoice => invoice.numFactura == numeroFactura);
+        this.invoices = this.invoices.filter(invoice => invoice.numFactura != numeroFactura);
+        return deleteInvoice
     }
 }
